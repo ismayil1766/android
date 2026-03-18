@@ -1,0 +1,39 @@
+workflows:
+  android-debug-apk:
+    name: Android Debug APK
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    scripts:
+      - name: Android layihə qovluğunu tap
+        script: |
+          set -e
+          if [ -f "$CM_BUILD_DIR/settings.gradle" ] && [ -f "$CM_BUILD_DIR/app/build.gradle" ]; then
+            PROJECT_DIR="$CM_BUILD_DIR"
+          elif [ -f "$CM_BUILD_DIR/satis_offline_android_webview_app/settings.gradle" ] && [ -f "$CM_BUILD_DIR/satis_offline_android_webview_app/app/build.gradle" ]; then
+            PROJECT_DIR="$CM_BUILD_DIR/satis_offline_android_webview_app"
+          else
+            echo "Android project root tapilmadi"
+            find "$CM_BUILD_DIR" -maxdepth 3 \( -name settings.gradle -o -name build.gradle \)
+            exit 1
+          fi
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$CM_ENV"
+
+      - name: Gradle 8.9 qurasdir
+        script: |
+          set -e
+          cd "$HOME"
+          curl -L -o gradle-8.9-bin.zip https://services.gradle.org/distributions/gradle-8.9-bin.zip
+          unzip -q -o gradle-8.9-bin.zip
+          "$HOME/gradle-8.9/bin/gradle" --version
+
+      - name: Debug APK build et
+        script: |
+          set -e
+          cd "$PROJECT_DIR"
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          "$HOME/gradle-8.9/bin/gradle" assembleDebug
+
+    artifacts:
+      - "**/app/build/outputs/apk/debug/*.apk"
+      - "**/app/build/outputs/logs/*.log"

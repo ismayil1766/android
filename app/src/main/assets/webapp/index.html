@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Satış Offline</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Satış Offline</h1>
+      <p>Telefon daxilində işləyən satış, borc və ödəniş sistemi</p>
+    </div>
+  </header>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab active" data-tab="dashboard">Ana səhifə</button>
+    <button class="tab" data-tab="customers">Müştərilər</button>
+    <button class="tab" data-tab="products">Məhsullar</button>
+    <button class="tab" data-tab="sales">Satış</button>
+    <button class="tab" data-tab="returns">İadə</button>
+    <button class="tab" data-tab="payments">Ödəniş</button>
+    <button class="tab" data-tab="reports">Hesabat</button>
+  </nav>
+
+  <main class="container">
+    <section class="screen active" id="screen-dashboard">
+      <div class="card-grid" id="dashboard-cards"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title-row">
+            <h2>Bugünkü satışlar</h2>
+            <span class="muted" id="today-label"></span>
+          </div>
+          <div id="today-sales-list" class="list-area"></div>
+        </div>
+        <div class="card">
+          <h2>Borclu müştərilər</h2>
+          <div id="dashboard-debts" class="list-area"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-customers">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Müştəri əlavə et / düzəlt</h2>
+          <form id="customer-form" class="stack-form">
+            <input type="hidden" id="customer-id" />
+            <label>Müştəri adı<input id="customer-name" required /></label>
+            <label>Əlaqə nömrəsi<input id="customer-phone" /></label>
+            <label>Ərazi<input id="customer-area" /></label>
+            <label>Qeyd<textarea id="customer-note" rows="3"></textarea></label>
+            <div class="button-row">
+              <button type="submit" class="primary">Yadda saxla</button>
+              <button type="button" class="secondary" id="customer-reset">Təmizlə</button>
+            </div>
+          </form>
+        </div>
+        <div class="card">
+          <h2>Müştəriyə özəl qiymət</h2>
+          <form id="price-form" class="stack-form">
+            <input type="hidden" id="price-id" />
+            <label>Müştəri<select id="price-customer" required></select></label>
+            <label>Məhsul<select id="price-product" required></select></label>
+            <label>Qiymət<input id="price-value" type="number" step="0.01" min="0.01" required /></label>
+            <div class="button-row">
+              <button type="submit" class="primary">Qiyməti yaz</button>
+              <button type="button" class="secondary" id="price-reset">Təmizlə</button>
+            </div>
+          </form>
+          <div id="customer-prices-table" class="table-wrap top-space"></div>
+        </div>
+      </div>
+      <div class="card top-space">
+        <div class="card-title-row">
+          <h2>Müştəri xülasəsi</h2>
+          <span class="muted">Sətirə kliklə detalları aç</span>
+        </div>
+        <div id="customers-summary-table" class="table-wrap"></div>
+        <div id="customer-detail" class="detail-box hidden"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-products">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Məhsul əlavə et / düzəlt</h2>
+          <form id="product-form" class="stack-form">
+            <input type="hidden" id="product-id" />
+            <input type="hidden" id="product-image-data" />
+            <label>Məhsul adı<input id="product-name" required /></label>
+            <label>Başlanğıc stok<input id="product-stock" type="number" step="1" min="0" required /></label>
+            <label>Maya qiyməti<input id="product-cost" type="number" step="0.01" min="0" required /></label>
+            <label>Standart satış qiyməti<input id="product-price" type="number" step="0.01" min="0.01" required /></label>
+            <label>Məhsul şəkli
+              <input id="product-image" type="file" accept="image/*" />
+            </label>
+            <div class="muted">Şəkil avtomatik kiçildilib saxlanılır.</div>
+            <div id="product-image-preview" class="image-preview empty">Şəkil seçilməyib</div>
+            <button type="button" class="secondary hidden-by-default" id="product-image-clear">Şəkili sil</button>
+            <label>Qeyd<textarea id="product-note" rows="3"></textarea></label>
+            <div class="button-row">
+              <button type="submit" class="primary">Yadda saxla</button>
+              <button type="button" class="secondary" id="product-reset">Təmizlə</button>
+            </div>
+          </form>
+        </div>
+        <div class="card">
+          <h2>Anbar görünüşü</h2>
+          <div id="products-table" class="table-wrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-sales">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Yeni satış / səbət</h2>
+          <form id="sale-form" class="stack-form">
+            <label>Tarix<input id="sale-date" type="date" required /></label>
+            <label>Sənəd No<input id="sale-doc" required /></label>
+            <label>Müştəri<select id="sale-customer" required></select></label>
+            <div class="divider-title">Məhsulu səbətə əlavə et</div>
+            <label>Məhsul<select id="sale-product"></select></label>
+            <label>Say<input id="sale-qty" type="number" step="1" min="1" /></label>
+            <label>Satış qiyməti<input id="sale-price" type="number" step="0.01" min="0.01" /></label>
+            <label>Qeyd<textarea id="sale-note" rows="2"></textarea></label>
+            <div class="info-box" id="sale-preview"></div>
+            <div class="button-row">
+              <button type="button" class="primary" id="sale-add-item">Səbətə əlavə et</button>
+              <button type="button" class="secondary" id="sale-reset-current">Cari sətri təmizlə</button>
+            </div>
+            <div class="card-subsection">
+              <div class="card-title-row">
+                <strong>Səbət</strong>
+                <button type="button" class="secondary small" id="sale-clear-cart">Səbəti boşalt</button>
+              </div>
+              <div id="sale-cart-table" class="table-wrap top-space"></div>
+            </div>
+            <label>Alınan pul (ümumi qaimə üzrə)<input id="sale-received" type="number" step="0.01" min="0" value="0" /></label>
+            <div class="info-box" id="sale-cart-summary"></div>
+            <div class="button-row">
+              <button type="submit" class="primary">Satışı tamamla</button>
+              <button type="button" class="secondary" id="sale-print-last">Son qaiməni çap et</button>
+            </div>
+          </form>
+        </div>
+        <div class="card">
+          <h2>Son satışlar</h2>
+          <div id="sales-table" class="table-wrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-returns">
+      <div class="grid-2">
+        <div class="card">
+          <h2>İadə / əvəz</h2>
+          <form id="return-form" class="stack-form">
+            <label>Tarix<input id="return-date" type="date" required /></label>
+            <label>Müştəri<select id="return-customer" required></select></label>
+            <label>Məhsul<select id="return-product" required></select></label>
+            <label>İlk satılan say<input id="return-original" type="number" step="1" min="0" required /></label>
+            <label>Qüsurlu / qayıdan say<input id="return-defective" type="number" step="1" min="0" required /></label>
+            <label>Əvəz verilən say<input id="return-replacement" type="number" step="1" min="0" required /></label>
+            <label>Qeyd<textarea id="return-note" rows="3"></textarea></label>
+            <div class="info-box" id="return-preview"></div>
+            <button type="submit" class="primary">İadəni əlavə et</button>
+          </form>
+        </div>
+        <div class="card">
+          <h2>İadə tarixçəsi</h2>
+          <div id="returns-table" class="table-wrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-payments">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Əlavə ödəniş</h2>
+          <form id="payment-form" class="stack-form">
+            <label>Tarix<input id="payment-date" type="date" required /></label>
+            <label>Müştəri<select id="payment-customer" required></select></label>
+            <label>Ödənilən məbləğ<input id="payment-amount" type="number" step="0.01" min="0.01" required /></label>
+            <label>Qeyd<textarea id="payment-note" rows="3"></textarea></label>
+            <div class="info-box" id="payment-preview"></div>
+            <button type="submit" class="primary">Ödənişi əlavə et</button>
+          </form>
+        </div>
+        <div class="card">
+          <h2>Ödəniş tarixçəsi</h2>
+          <div id="payments-table" class="table-wrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-reports">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Backup / Restore</h2>
+          <div class="stack-form">
+            <button id="export-json" class="primary">JSON backup endir</button>
+            <label>JSON fayl yüklə<input id="import-json" type="file" accept="application/json" /></label>
+            <button id="reset-demo" class="danger">Demo məlumatı sıfırdan bərpa et</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Bluetooth printer / ESC-POS</h2>
+          <div class="stack-form">
+            <label>Qoşulu printer<select id="printer-device"></select></label>
+            <div class="button-row">
+              <button type="button" class="secondary" id="printer-refresh">Printerləri yenilə</button>
+              <button type="button" class="primary" id="printer-test">Test çap et</button>
+            </div>
+            <div id="printer-status" class="info-box">Printer vəziyyəti burada görünəcək.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card top-space">
+        <h2>Sistem qeydləri</h2>
+        <ul class="notes-list">
+          <li>Satış səbətə yığılır, ən sonda ümumi satış tamamlanır.</li>
+          <li>Bir qaiməyə bir neçə məhsul əlavə etmək olar.</li>
+          <li>Satış zamanı alınan pul ümumi qaimə məbləğini keçə bilməz.</li>
+          <li>Müştəriyə özəl qiymət varsa məhsul seçiləndə avtomatik gəlir.</li>
+          <li>Bluetooth printer üçün cihaz əvvəlcədən Android-də pair olunmalıdır.</li>
+          <li>İadədə qüsurlu say ilk saydan, əvəz sayı isə qüsurlu saydan çox ola bilməz.</li>
+          <li>Tarixçəsi olan məhsulda başlanğıc stok mənfi qalığa salına bilməz.</li>
+          <li>Bütün məlumatlar telefonda saxlanılır.</li>
+        </ul>
+      </div>
+      <div class="card top-space">
+        <h2>Ümumi hesabat</h2>
+        <div id="reports-table" class="table-wrap"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
